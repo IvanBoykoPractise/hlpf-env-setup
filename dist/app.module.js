@@ -8,16 +8,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const app_controller_1 = require("./app.controller");
-const app_service_1 = require("./app.service");
+const config_1 = require("@nestjs/config");
+const typeorm_1 = require("@nestjs/typeorm");
+const category_entity_1 = require("./categories/category.entity");
+const product_entity_1 = require("./products/product.entity");
+const categories_module_1 = require("./categories/categories.module");
+const products_module_1 = require("./products/products.module");
+const _1700000001_CreateTables_1 = require("./migrations/1700000001-CreateTables");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        imports: [
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            typeorm_1.TypeOrmModule.forRoot({
+                type: 'postgres',
+                host: process.env.POSTGRES_HOST,
+                port: parseInt(process.env.POSTGRES_PORT, 10),
+                username: process.env.POSTGRES_USER,
+                password: process.env.POSTGRES_PASSWORD,
+                database: process.env.POSTGRES_DB,
+                entities: [category_entity_1.Category, product_entity_1.Product],
+                synchronize: false,
+                migrationsRun: true,
+                migrations: [_1700000001_CreateTables_1.CreateTables1700000001],
+            }),
+            categories_module_1.CategoriesModule,
+            products_module_1.ProductsModule,
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
