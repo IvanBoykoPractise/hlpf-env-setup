@@ -1,3 +1,32 @@
-.env
-dist/
+# Залежності
 node_modules/
+
+# Збірка (артефакти)
+dist/
+build/
+
+# Секрети (КРИТИЧНО)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Docker
+docker-data/
+
+# IDE (VS Code та інші)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Операційна система (Windows/Mac сміття)
+Thumbs.db
+.DS_Store
