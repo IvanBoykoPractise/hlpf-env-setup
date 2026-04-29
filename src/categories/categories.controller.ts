@@ -1,36 +1,57 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto'; // Додали імпорт
-import { UpdateCategoryDto } from './dto/update-category.dto'; // Додали імпорт
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
-@Controller('categories') // ПРИБРАЛИ 'api/', бо він уже є в main.ts (setGlobalPrefix)
+@Controller('api/categories')
 export class CategoriesController {
-  constructor(private readonly service: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) {}
 
-  @Get() 
-  findAll() { 
-    return this.service.findAll(); 
+  @Get()
+  findAll() {
+    return this.categoriesService.findAll();
   }
 
-  @Get(':id') 
-  findOne(@Param('id', ParseIntPipe) id: number) { 
-    return this.service.findOne(id); 
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.categoriesService.findOne(id);
   }
 
-  @Post() 
-  // ЗАМІНИЛИ any на CreateCategoryDto - це активує валідацію!
-  create(@Body() body: CreateCategoryDto) { 
-    return this.service.create(body); 
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  create(@Body() dto: CreateCategoryDto) {
+    return this.categoriesService.create(dto);
   }
 
-  @Patch(':id') 
-  // ЗАМІНИЛИ any на UpdateCategoryDto
-  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateCategoryDto) { 
-    return this.service.update(id, body); 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCategoryDto,
+  ) {
+    return this.categoriesService.update(id, dto);
   }
 
-  @Delete(':id') 
-  remove(@Param('id', ParseIntPipe) id: number) { 
-    return this.service.remove(id); 
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.categoriesService.remove(id);
   }
 }
