@@ -1,31 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { TrimPipe } from './common/trim.pipe';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Налаштування глобальних пайпів
-  app.useGlobalPipes(
-    // 1. Пайп для обрізки пробілів у рядках
-    new TrimPipe(), 
-    
-    // 2. Пайп для валідації вхідних даних (DTO)
-    new ValidationPipe({
-      whitelist: true,            // Видаляє з запиту поля, яких немає в DTO
-      forbidNonWhitelisted: true, // Повертає помилку 400, якщо передано зайві поля
-      transform: true,            // Автоматично перетворює типи (наприклад, "5" -> 5)
-    }),
-  );
+  // Валідація (вже має бути з минулих занять)
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  // Налаштування префікса API (якщо ти використовуєш /api/...)
-  app.setGlobalPrefix('api');
+  // Реєстрація нових компонентів
+  app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Для Docker важливо слухати на 0.0.0.0
-  await app.listen(3000, '0.0.0.0');
-  
-  const url = await app.getUrl();
-  console.log(`Application is running on: ${url}`);
+  // Налаштування Swagger
+  const config = new DocumentBuilder()
+    .setTitle('MiniShop API')
+    .setDescription('REST API для навчального інтернет-магазину. Автентифікація через JWT Bearer token.')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
+  await app.listen(process.env.APP_PORT || 3000);
 }
 bootstrap();
