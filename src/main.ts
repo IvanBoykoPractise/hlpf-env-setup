@@ -1,32 +1,34 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Валідація (вже має бути з минулих занять)
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
-  // Реєстрація нових компонентів
-  app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // Глобальний пайп для валідації та ТРАНСФОРМАЦІЇ (важливо для пагінації)
+  app.useGlobalPipes(new ValidationPipe({ 
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }));
 
   // Налаштування Swagger
   const config = new DocumentBuilder()
-    .setTitle('MiniShop API')
-    .setDescription('REST API для навчального інтернет-магазину. Автентифікація через JWT Bearer token.')
+    .setTitle('HLPF API')
+    .setDescription('The products API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(process.env.APP_PORT || 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  // Оце виведе тобі лінк у термінал
+  console.log(`\n✅ Додаток працює!`);
+  console.log(`🔗 Локальне посилання: http://localhost:${port}`);
+  console.log(`📖 Документація Swagger: http://localhost:${port}/api-docs\n`);
 }
 bootstrap();
